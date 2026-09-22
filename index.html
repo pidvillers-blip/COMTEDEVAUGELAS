@@ -267,6 +267,14 @@ p{margin:0}
   }
 }
 .hero{position:relative;height:112vh;height:112svh;min-height:600px}
+/* mobile : la photo se fond dans le noir au lieu de finir sur un bord net,
+   la bouteille apparaît maintenant juste en dessous. */
+@media (max-width:900px){
+  .scene[data-scene="hero"]{
+    -webkit-mask-image:linear-gradient(to bottom,#000 70%,transparent 100%);
+            mask-image:linear-gradient(to bottom,#000 70%,transparent 100%);
+  }
+}
 .hero__inner{
   position:sticky;top:0;height:100vh;height:100svh;
   display:grid;align-items:center;
@@ -938,7 +946,9 @@ p{margin:0}
     mouseEase: 0.085,      // plus haut = suit la souris de plus près
     parallaxHero: 0.22,    // facteurs de parallaxe
     parallaxHeroText: -0.14,
-    dpr: { desktop: 2, mobile: 1.6 },
+    /* mobile 1.6 → 2.5 : les écrans de téléphone sont à 3x, à 1.6 le rendu
+       était agrandi ~2x, d'où les pixels visibles. */
+    dpr: { desktop: 2, mobile: 2.5 },
     /* SÉQUENCE D'IMAGES (turntable rendu dans Blender).
        Si la première image répond, elle prend la main sur la 3D temps réel :
        le rendu affiché est alors exactement celui de Cycles.
@@ -1016,7 +1026,11 @@ p{margin:0}
     },
 
 
-    maxBlur: 3             // flou d'apparition des textes (0 = aucun)
+    maxBlur: 3,            // flou d'apparition des textes (0 = aucun)
+    /* MOBILE : distance (en hauteurs d'écran) sur laquelle la bouteille et
+       la phrase s'allument AVANT que la scène soit épinglée. 0 = ancien
+       comportement (écran noir). Plus haut = apparaît plus tôt. */
+    enterLead: 0.75
   };
 
   /* Surcharge par l'URL : ?yaw=8 pour caler l'étiquette de face sans
@@ -1276,7 +1290,8 @@ p{margin:0}
       };
     });
     const through = $('[data-through]');
-    return function (p) {
+    return function (p, pre) {
+      if (pre === undefined) pre = 1;
       for (let i = 0; i < sats.length; i++) {
         const s = sats[i];
         // fenêtre : apparition sur le 1er tiers, sortie sur le dernier
@@ -1305,8 +1320,10 @@ p{margin:0}
       // phrase de transition : présente à l'entrée, s'efface quand la bouteille prend la main
       if (through) {
         const TL = CONFIG.throughline;
-        const o = smooth(range(p, TL.in[0], TL.in[1]))
-                * (1 - smooth(range(p, TL.out[0], TL.out[1])));
+        // mobile : la phrase monte avec la scène et s'allume pendant l'arrivée
+        const oIn = S.mobile ? smooth(range(pre, 0.35, 1))
+                             : smooth(range(p, TL.in[0], TL.in[1]));
+        const o = oIn * (1 - smooth(range(p, TL.out[0], TL.out[1])));
         through.style.opacity = o.toFixed(3);
         through.style.transform = 'translate3d(0,' + (-50 - p * 60).toFixed(1) + '%,0)';
       }
@@ -1316,8 +1333,11 @@ p{margin:0}
   function initFinalText() {
     const t = $('[data-through-2]');
     if (!t) return function () {};
-    return function (p) {
-      const o = smooth(range(p, 0.12, 0.34)) * (1 - smooth(range(p, 0.72, 0.95)));
+    return function (p, pre) {
+      const oIn = S.mobile && pre !== undefined
+        ? smooth(range(pre, 0.35, 1))          // mobile : dès l'arrivée
+        : smooth(range(p, 0.12, 0.34));
+      const o = oIn * (1 - smooth(range(p, 0.72, 0.95)));
       t.style.opacity = o.toFixed(3);
       t.style.transform = 'translate3d(0,' + (-50 + (1 - o) * 8).toFixed(1) + '%,0)';
     };
@@ -2030,7 +2050,7 @@ p{margin:0}
     function init() {
       try {
         renderer = new THREE.WebGLRenderer({
-          canvas: canvas, antialias: !S.mobile, alpha: true, powerPreference: 'high-performance'
+          canvas: canvas, antialias: true, alpha: true, powerPreference: 'high-performance'
         });
       } catch (e) { return false; }
       if (!renderer || !renderer.getContext()) return false;
@@ -2143,13 +2163,22 @@ p{margin:0}
           const pB = stageB ? clamp((y - stageB.top) / Math.max(1, stageB.h - vh), 0, 1) : 0;
           const inB = stageB && y > stageB.top - vh && y < stageB.top + stageB.h;
 
-          if (inA) satUpdate(pA);
-          if (inB) finalUpdate(pB);
+          /* ARRIVÉE (mobile). preA/preB : 0 quand la scène entre par le bas
+             de l'écran, 1 quand elle est épinglée. Avant, rien n'apparaissait
+             avant 1 — soit un écran noir entier à faire défiler. */
+          const lead = vh * CONFIG.enterLead;
+          const preA = stageA ? range(y, stageA.top - lead, stageA.top) : 0;
+          const preB = stageB ? range(y, stageB.top - lead, stageB.top) : 0;
+
+          if (inA) satUpdate(pA, S.mobile ? preA : 1);
+          if (inB) finalUpdate(pB, S.mobile ? preB : 1);
 
           // opacité du canvas : fondu d'entrée / sortie de chaque scène
           const FA = CONFIG.fade.scroll, FB = CONFIG.fade.final;
-          const oA = inA ? smooth(range(pA, FA[0], FA[1])) * (1 - smooth(range(pA, FA[2], FA[3]))) : 0;
-          const oB = inB ? smooth(range(pB, FB[0], FB[1])) * (1 - smooth(range(pB, FB[2], FB[3]))) : 0;
+          const inFA = S.mobile ? smooth(preA) : smooth(range(pA, FA[0], FA[1]));
+          const inFB = S.mobile ? smooth(preB) : smooth(range(pB, FB[0], FB[1]));
+          const oA = inA ? inFA * (1 - smooth(range(pA, FA[2], FA[3]))) : 0;
+          const oB = inB ? inFB * (1 - smooth(range(pB, FB[2], FB[3]))) : 0;
           const o = Math.max(oA, oB);
 
           if (Math.abs(o - opacity) > 0.002) {
@@ -2199,7 +2228,8 @@ p{margin:0}
              mouvement régulier même si le scroll est saccadé. */
           if (swayer) {
             const SW = CONFIG.sway;
-            const tgt = clamp(scrollVel / Math.max(1, SW.velFull), 0, 1);
+            let tgt = clamp(scrollVel / Math.max(1, SW.velFull), 0, 1);
+            if (S.reduced && oB > oA) tgt = 0;   // réduit : 1re scène uniquement
             swAct = lerp(swAct, tgt, ease(SW.ease));
             const ph = t * (Math.PI * 2 / Math.max(0.2, SW.period));
             swayer.rotation.z = Math.sin(ph) * (SW.rollDeg + SW.rollScrollDeg * swAct) * DEG;
@@ -2282,7 +2312,9 @@ p{margin:0}
     // Réduire les animations : on garde le site entier, seuls les
     // mouvements automatiques sont coupés (voir section 10 du CSS).
     if (S.reduced) {
-      CONFIG.sway.rollDeg = 0; CONFIG.sway.rollScrollDeg = 0; CONFIG.sway.yawDeg = 0;
+      // pas de balancement permanent, mais celui du défilement reste
+      // (première scène seulement, voir BALANCEMENT dans Bottle.update)
+      CONFIG.sway.rollDeg = 0;
       CONFIG.breathe = 0;
     }
 
