@@ -260,11 +260,9 @@ p{margin:0}
        assets/images/ et remettez son nom exact ci-dessous (extension
        comprise : .jpg et .png ne sont pas interchangeables). */
     /* hero.png n'existe pas (404) : c'était l'image manquante sur mobile.
-       Version allégée 2400 px (la 6192 px pèse ~100 Mo une fois décodée,
-       iOS Safari la décharge ou ne l'affiche pas).
-       62 % horizontal = la bouteille reste dans le cadre portrait ;
-       à 50 % elle sortait du champ par la droite. */
-    --photo: url('assets/images/m/hero.jpg');
+       Même fichier que le desktop. 62 % horizontal = la bouteille reste
+       dans le cadre portrait ; à 50 % elle sortait du champ par la droite. */
+    --photo: url('assets/images/hero.jpg');
     --photo-pos: 62% 50%;
   }
 }
@@ -332,6 +330,21 @@ p{margin:0}
 }
 .no-webgl .fallback-bottle{opacity:1}
 
+/* Mobile : la barre d'adresse qui apparaît/disparaît au scroll changeait la
+   hauteur du canvas (100 %) sans que le rendu suive → bouteille étirée.
+   100lvh = hauteur fixe, celle de l'écran barre repliée. */
+@media (max-width:900px){
+  #gl,#seq{bottom:auto;height:100vh;height:100lvh}
+}
+
+/* Points d'arrêt du scroll (mobile) : posés en JS dans la scène bouteille,
+   un par texte. Invisibles, sans effet sur la mise en page. */
+.snap{position:absolute;left:0;width:1px;height:1px;pointer-events:none}
+@media (max-width:900px){
+  html{scroll-snap-type:y proximity}
+  .snap{scroll-snap-align:start;scroll-snap-stop:always}
+}
+
 /* --- 07. SECTIONS ÉDITORIALES -------------------------------------------- */
 .sect{position:relative;z-index:2}
 .sect__body{position:relative;z-index:3;padding:var(--sec) var(--gut)}
@@ -393,12 +406,6 @@ p{margin:0}
   will-change:transform;
 }
 .step__vis .scene__layer{inset:-10%}   /* décor SVG, sous la photo */
-/* Mobile : --photo-m (posée à côté de --photo dans le HTML) sert une
-   version 1200 px. Absente → on retombe sur --photo. */
-@media (max-width:900px){
-  .step__ph{background-image:var(--photo-m,var(--photo,none));
-            background-position:var(--photo-pos-m,var(--photo-pos,center))}
-}
 
 /* --- le texte --- */
 .step__txt{position:relative}
@@ -535,24 +542,15 @@ p{margin:0}
 }
 
 /* --- 10. REDUCED MOTION --------------------------------------------------
-   « Réduire les animations » (iOS : Accessibilité ▸ Mouvement ; Android :
-   Supprimer les animations) est activé sur beaucoup de téléphones.
-   L'ancienne version retirait alors TOUT : 3D, apparitions, mise en scène —
-   c'est exactement le site « cassé » constaté sur mobile.
-   Désormais : même site, même bouteille pilotée par le scroll (mouvement
-   contrôlé par l'utilisateur), mais aucun déplacement automatique :
-   pas de parallaxe, pas de glissement, pas de zoom, pas de balancement.
-   Les apparitions deviennent de simples fondus.
+   « Réduire les animations » est activé sur le téléphone de test.
+   Choix retenu : TOUTES les animations de texte et d'image restent
+   (mots qui montent, lettres, fondus, rideaux, parallaxe des arômes…).
+   Ne sont coupés que les mouvements qui tournent en boucle sans action
+   de l'utilisateur : grain, trait « Faites défiler », balancement et
+   respiration de la bouteille (voir boot()).
    ------------------------------------------------------------------------ */
 @media (prefers-reduced-motion:reduce){
   .grain,.hero__scroll .line{animation:none}
-  .word > i,.char,.fade,.step__idx{transform:none !important}
-  .word > i{opacity:0;transition:opacity .9s var(--e-soft);
-            transition-delay:calc(var(--i,0) * 40ms)}
-  .is-in .word > i{opacity:1}
-  .step__vis{clip-path:none;opacity:0;transition:opacity 1.1s var(--e-soft)}
-  .is-in .step__vis{opacity:1}
-  .step__zoom{transform:none;transition:none}
 }
 </style>
 </head>
@@ -697,7 +695,7 @@ p{margin:0}
     <div class="steps">
       <article class="step" data-reveal>
         <figure class="step__vis" data-scene="vendange"
-                style="--photo:url('assets/images/img1.jpg');--photo-m:url('assets/images/m/img1.jpg');--photo-pos:center;--photo-dim:0">
+                style="--photo:url('assets/images/img1.jpg');--photo-pos:center;--photo-dim:0">
           <div class="step__zoom">
             <div class="scene__layer" data-depth="0.06">
               <svg viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -729,7 +727,7 @@ p{margin:0}
 
       <article class="step" data-reveal>
         <figure class="step__vis" data-scene="cuve"
-                style="--photo:url('assets/images/img2.jpg');--photo-m:url('assets/images/m/img2.jpg');--photo-pos:center;--photo-dim:0">
+                style="--photo:url('assets/images/img2.jpg');--photo-pos:center;--photo-dim:0">
           <div class="step__zoom">
             <div class="scene__layer" data-depth="0.06">
               <svg viewBox="0 0 750 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -758,7 +756,7 @@ p{margin:0}
 
       <article class="step" data-reveal>
         <figure class="step__vis" data-scene="cave"
-                style="--photo:url('assets/images/img3.jpg');--photo-m:url('assets/images/m/img3.jpg');--photo-pos:center;--photo-dim:0">
+                style="--photo:url('assets/images/img3.jpg');--photo-pos:center;--photo-dim:0">
           <div class="step__zoom">
             <div class="scene__layer" data-depth="0.06">
               <svg viewBox="0 0 800 1060" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -1076,7 +1074,11 @@ p{margin:0}
 
     function add(sub) { subs.push(sub); return sub; }
 
-    function measure() {
+    function measure(e) {
+      // mobile : un resize qui ne change que la hauteur = barre d'adresse.
+      // Tout remesurer à ce moment faisait sauter cadrage et progression.
+      if (e === 'resize' && S.coarse && S.w === window.innerWidth &&
+          Math.abs(window.innerHeight - S.h) < 200) return;
       S.w = window.innerWidth;
       S.h = window.innerHeight;
       S.mobile = S.w <= 900;
@@ -1111,7 +1113,7 @@ p{margin:0}
 
     let rt = 0;
     window.addEventListener('resize', function () {
-      clearTimeout(rt); rt = setTimeout(measure, 160);
+      clearTimeout(rt); rt = setTimeout(function () { measure('resize'); }, 160);
     }, { passive: true });
 
     document.addEventListener('visibilitychange', function () {
@@ -1193,7 +1195,6 @@ p{margin:0}
      PARALLAXE — décors et blocs de texte, transform uniquement
      ======================================================================== */
   function initParallax() {
-    if (S.reduced) return;
     const items = [];
 
     $$('.scene, .step__vis').forEach(function (scene) {
@@ -1240,7 +1241,7 @@ p{margin:0}
     const hero = $('#hero');
     const txt = $('[data-hero-text]');
     const hint = $('[data-hero-scroll]');
-    if (!hero || S.reduced) return;
+    if (!hero) return;
     let box = null;
 
     const sub = Engine.add({
@@ -1288,7 +1289,7 @@ p{margin:0}
           continue;
         }
         if (!s.vis) { s.el.style.visibility = 'visible'; s.vis = true; }
-        const mv = S.reduced ? 0 : 1;        // réduire les animations : fondu seul
+        const mv = 1;
         const dx = S.mobile ? 0 : mv * (s.side * (1 - inF) * 34 - s.side * outF * 22);
         const dy = S.mobile
           ? mv * ((1 - inF) * 26 - outF * 26)  // sur mobile : glissement vertical seul
@@ -1307,7 +1308,7 @@ p{margin:0}
         const o = smooth(range(p, TL.in[0], TL.in[1]))
                 * (1 - smooth(range(p, TL.out[0], TL.out[1])));
         through.style.opacity = o.toFixed(3);
-        through.style.transform = 'translate3d(0,' + (-50 - (S.reduced ? 0 : p * 60)).toFixed(1) + '%,0)';
+        through.style.transform = 'translate3d(0,' + (-50 - p * 60).toFixed(1) + '%,0)';
       }
     };
   }
@@ -1318,8 +1319,37 @@ p{margin:0}
     return function (p) {
       const o = smooth(range(p, 0.12, 0.34)) * (1 - smooth(range(p, 0.72, 0.95)));
       t.style.opacity = o.toFixed(3);
-      t.style.transform = 'translate3d(0,' + (-50 + (S.reduced ? 0 : (1 - o) * 8)).toFixed(1) + '%,0)';
+      t.style.transform = 'translate3d(0,' + (-50 + (1 - o) * 8).toFixed(1) + '%,0)';
     };
+  }
+
+  /* ==========================================================================
+     SNAPS — le scroll marque un arrêt sur chaque texte (mobile uniquement)
+     Un repère par texte, placé là où il est pleinement lisible. Le CSS
+     (scroll-snap proximity + snap-stop always) fait le reste : pas de
+     détournement du scroll en JS, le défilement reste natif.
+     ======================================================================== */
+  function initSnaps(stageEl) {
+    if (!stageEl) return;
+    // progression où chaque texte est net : milieu de sa fenêtre pleine
+    // (entre 30 % et 72 % de [from,to], cf. initSatellites)
+    const ps = [(CONFIG.throughline.in[1] + CONFIG.throughline.out[0]) / 2];
+    $$('[data-sat]', stageEl).forEach(function (el) {
+      const a = parseFloat(el.dataset.from), b = parseFloat(el.dataset.to);
+      ps.push(a + (b - a) * 0.51);
+    });
+    const marks = ps.map(function () {
+      const m = document.createElement('div');
+      m.className = 'snap'; m.setAttribute('aria-hidden', 'true');
+      stageEl.appendChild(m); return m;
+    });
+    Engine.add({
+      measure: function () {
+        const span = Math.max(1, stageEl.offsetHeight - S.h);
+        marks.forEach(function (m, i) { m.style.top = Math.round(ps[i] * span) + 'px'; });
+      },
+      update: function () {}
+    });
   }
 
   /* ==========================================================================
@@ -1956,7 +1986,7 @@ p{margin:0}
       const fov = camera.fov * DEG;
       let dist = (H / occ / 2) / Math.tan(fov / 2);
       // en portrait très étroit, on recule un peu pour éviter le débordement
-      const aspect = S.w / S.h;
+      const aspect = camera.aspect;
       if (aspect < 0.62) dist *= 1.08;
       camera.position.set(0, 0, dist);
       camera.lookAt(0, 0, 0);
@@ -2080,6 +2110,7 @@ p{margin:0}
       const elA = $('[data-stage="bottle"]');
       const elB = $('[data-stage="final"]');
 
+      let hidden = true;
       const sub = Engine.add({
         measure: function () {
           stageA = boxOf(elA);
@@ -2087,8 +2118,9 @@ p{margin:0}
           if (renderer) {
             renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1,
               S.mobile ? CONFIG.dpr.mobile : CONFIG.dpr.desktop));
-            renderer.setSize(S.w, S.h, false);
-            camera.aspect = S.w / S.h; camera.updateProjectionMatrix();
+            const cw = canvas.clientWidth || S.w, ch = canvas.clientHeight || S.h;
+            renderer.setSize(cw, ch, false);
+            camera.aspect = cw / ch; camera.updateProjectionMatrix();
             frameCamera();
           }
         },
@@ -2125,7 +2157,9 @@ p{margin:0}
             canvas.style.opacity = o.toFixed(3);
             halo.style.opacity = (o * 0.9).toFixed(3);
           }
-          if (!S.webgl || o < 0.004) return;
+          if (!S.webgl || o < 0.004) { hidden = true; return; }
+          const snapNow = hidden && S.mobile;   // réapparition : pas de rattrapage
+          hidden = false;
 
           /* Lissage indépendant du frame-rate.
              Un lerp à coefficient fixe avance d'autant moins que la frame est
@@ -2136,7 +2170,8 @@ p{margin:0}
           const dt = Math.min((now - tPrev) / 1000, 0.05);
           tPrev = now;
           const ease = function (k) { return 1 - Math.pow(1 - k, dt * 60); };
-          const kRot = ease(CONFIG.inertia), kSlow = ease(0.07), kMouse = ease(CONFIG.mouseEase);
+          const kRot = snapNow ? 1 : ease(CONFIG.inertia),
+                kSlow = snapNow ? 1 : ease(0.07), kMouse = ease(CONFIG.mouseEase);
 
           const tx = (oB > oA) ? CONFIG.offsetX.final : CONFIG.offsetX.scroll;
           group.position.x = lerp(group.position.x, tx, kSlow);
@@ -2248,7 +2283,7 @@ p{margin:0}
     // mouvements automatiques sont coupés (voir section 10 du CSS).
     if (S.reduced) {
       CONFIG.sway.rollDeg = 0; CONFIG.sway.rollScrollDeg = 0; CONFIG.sway.yawDeg = 0;
-      CONFIG.breathe = 0; CONFIG.maxBlur = 0;
+      CONFIG.breathe = 0;
     }
 
     initParallax();
@@ -2256,6 +2291,7 @@ p{margin:0}
     initCursor();
 
     const satUpdate = initSatellites($('[data-stage="bottle"]'));
+    initSnaps($('[data-stage="bottle"]'));
     const finalUpdate = initFinalText();
 
     const ok = (typeof THREE !== 'undefined') && Bottle.init();
