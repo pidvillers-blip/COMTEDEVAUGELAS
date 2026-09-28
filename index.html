@@ -350,7 +350,10 @@ p{margin:0}
 .snap{position:absolute;left:0;width:1px;height:1px;pointer-events:none}
 @media (max-width:900px){
   html{scroll-snap-type:y proximity}
-  .snap{scroll-snap-align:start;scroll-snap-stop:always}
+  /* snap-stop:always obligeait à s'arrêter sur CHAQUE texte, même avec un
+     swipe appuyé. En normal, un swipe lent se pose sur le texte, un swipe
+     rapide peut en passer plusieurs. */
+  .snap{scroll-snap-align:start;scroll-snap-stop:normal}
 }
 
 /* --- 07. SECTIONS ÉDITORIALES -------------------------------------------- */
@@ -506,7 +509,10 @@ p{margin:0}
   .grid{grid-template-columns:repeat(6,1fr)}
 
   /* La bouteille reste centrée ; les textes passent en bas, pleine largeur. */
-  .sat{width:auto;left:var(--gut);right:var(--gut);top:auto;bottom:11svh;text-align:left}
+  /* 11svh → 5svh (+ zone de geste iOS) : le texte descend sous la bouteille.
+     Réglable en live : --sat-bottom sur :root dans les devtools. */
+  .sat{width:auto;left:var(--gut);right:var(--gut);top:auto;
+    bottom:calc(var(--sat-bottom,5svh) + env(safe-area-inset-bottom,0px));text-align:left}
   .sat--l,.sat--r{left:var(--gut);right:var(--gut)}
   .sat .tick{height:20px;margin-bottom:.8rem}
   .sat p{max-width:34ch}
@@ -934,7 +940,7 @@ p{margin:0}
        donc 0.1 ≈ 3 % de sa hauteur). Positif = vers la droite.
        'scroll' = première scène, 'final' = plan rapproché.
        Réglable à la volée : ?dx=0.3 dans l'URL. */
-    offsetX: { scroll: 0.22, final: 0 },
+    offsetX: { scroll: 0.22, final: 0, scrollMobile: 0 },   // mobile : centrée (?dxm= pour régler)
     finalYawDeg: 0,        // décalage propre à la scène rapprochée (était -14)
     inertia: 0.09,         // 0 = figé, 1 = instantané. Plus bas = plus lourd.
     tiltDeg: 2.5,          // inclinaison avant constante
@@ -1046,6 +1052,8 @@ p{margin:0}
     if (isFinite(gr)) CONFIG.env.greenDamp = gr;
     const dx = parseFloat(q.get('dx'));
     if (isFinite(dx)) CONFIG.offsetX.scroll = dx;
+    const dxm = parseFloat(q.get('dxm'));
+    if (isFinite(dxm)) CONFIG.offsetX.scrollMobile = dxm;
     const ev = q.get('env');
     if (ev) CONFIG.env.urls = [ev];
     const bg = parseFloat(q.get('bg'));
@@ -1444,7 +1452,8 @@ p{margin:0}
       const dh = h * occ;
       const dw = dh * (img.width / img.height);
       const dx = (w - dw) / 2;
-      const ox = (closeUp ? CONFIG.offsetX.final : CONFIG.offsetX.scroll) / 3.18 * dh;
+      const ox = (closeUp ? CONFIG.offsetX.final
+                 : (S.mobile ? CONFIG.offsetX.scrollMobile : CONFIG.offsetX.scroll)) / 3.18 * dh;
       const dy = (h - dh) / 2 - (S.mobile ? h * CONFIG.liftMobile * 0.09 : 0);
       ctx.drawImage(img, dx + ox, dy, dw, dh);
     }
@@ -2202,7 +2211,8 @@ p{margin:0}
           const kRot = snapNow ? 1 : ease(CONFIG.inertia),
                 kSlow = snapNow ? 1 : ease(0.07), kMouse = ease(CONFIG.mouseEase);
 
-          const tx = (oB > oA) ? CONFIG.offsetX.final : CONFIG.offsetX.scroll;
+          const tx = (oB > oA) ? CONFIG.offsetX.final
+                   : (S.mobile ? CONFIG.offsetX.scrollMobile : CONFIG.offsetX.scroll);
           group.position.x = lerp(group.position.x, tx, kSlow);
 
           if (oB > oA) {
