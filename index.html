@@ -247,7 +247,7 @@ p{margin:0}
 .scene[data-scene="hero"]{
   --photo: url('assets/images/hero.jpg');
   --photo-pos: center;
-  --photo-dim: .42;
+  --photo-dim: .37;
 }
 @media (max-width:760px){
   .scene[data-scene="hero"]{
@@ -391,8 +391,18 @@ p{margin:0}
   transition:clip-path var(--step-rise) var(--e-out);
 }
 .is-in .step__vis{clip-path:inset(0 0 0 0)}
-/* la photo est portée par .step__ph, pas par ::after : elle doit pouvoir
-   bouger en parallaxe indépendamment du dézoom. */
+/* la photo est portée par .step__ph. PAS DE RECADRAGE : elle remplit
+   exactement le cadre (inset:0) et ne bouge plus en parallaxe à
+   l'intérieur — une parallaxe interne exige une photo plus grande que
+   le cadre, donc rognée. C'est le CADRE entier (figure) qui bouge :
+   data-parallax sur chaque <figure class="step__vis"> (desktop) et
+   data-parallax-m (mobile). Plus haut = plus d'amplitude ; signe opposé
+   à celui du texte = cadre et texte s'écartent, effet de profondeur. Le dézoom d'entrée (--step-zoom) rogne pendant
+   l'animation seulement et finit à l'échelle 1, image entière.
+   Condition : le fichier doit avoir le MÊME ratio que le cadre
+   (3:4 pour les étapes 1 et 3, 4:3 pour l'étape paysage), sinon
+   « cover » coupe l'excédent. --photo-fit:contain sur une étape garantit
+   zéro coupe quel que soit le fichier, au prix de bandes noires. */
 .step__vis::after{content:none}
 .step__vis::before{z-index:4}
 /* vignettage : creuse les bords, donne de la profondeur au cadre */
@@ -411,8 +421,9 @@ p{margin:0}
 
 /* --- la photo elle-même (parallaxe pilotée en JS via data-depth) --- */
 .step__ph{
-  position:absolute;inset:-10%;z-index:2;
-  background-image:var(--photo,none);background-size:cover;
+  position:absolute;inset:0;z-index:2;
+  background-image:var(--photo,none);background-size:var(--photo-fit,cover);
+  background-repeat:no-repeat;
   background-position:var(--photo-pos,center);
   will-change:transform;
 }
@@ -456,6 +467,21 @@ p{margin:0}
    deux étapes gauches est le calage vertical du texte (center vs end). */
 .step:nth-child(3) .step__vis{grid-column:1 / span 4}
 .step:nth-child(3) .step__txt{grid-column:6 / span 4;align-self:center}
+
+/* ---- ÉTAPE PAYSAGE (4:3 horizontal) ---------------------------------------
+   Classe .step--landscape posée sur l'<article>. Elle l'emporte sur les
+   règles :nth-child ci-dessus (spécificité .step.step--landscape + ordre).
+   Image en col 6-12 : 7 colonnes en 4:3 donnent quasiment la même HAUTEUR
+   qu'un cadre 3:4 sur 4 colonnes, donc les trois étapes gardent le même
+   poids visuel. Son bord gauche (col 6) tombe pile sur l'alignement des
+   textes des étapes 1 et 3 : une verticale continue traverse la section.
+   Le texte passe en col 1-4, sur le bord gauche des images 1 et 3. */
+.step--landscape{--step-ratio:4/3}
+.step.step--landscape .step__vis{grid-column:6 / span 7;grid-row:1}
+.step.step--landscape .step__txt{grid-column:1 / span 4;grid-row:1;
+  align-self:start;padding:10% 0 0}
+/* décor SVG de secours (sous la photo) : marge pour sa parallaxe */
+.step--landscape .scene__layer{inset:-16% -8%}
 
 /* --- 08. NOTES & FINAL --------------------------------------------------- */
 .notes{position:relative;padding:calc(var(--sec) * 1.2) var(--gut);min-height:110svh}
@@ -533,6 +559,10 @@ p{margin:0}
     grid-column:1 / span 6;grid-row:auto;align-self:auto;padding:0;
   }
   .step:nth-child(2) .step__txt{padding-left:1.8rem}
+  /* étape paysage : pleine largeur de contenu (un 4:3 sur 4 colonnes
+     sur 6 serait un timbre-poste), texte dessous, sans retrait. */
+  .step.step--landscape .step__vis{grid-column:1 / -1;grid-row:auto}
+  .step.step--landscape .step__txt{grid-column:1 / -1;grid-row:auto;padding:0}
 
   /* en dessous de 900px on repasse en pile : grid-row:auto, sinon les trois
      blocs se retrouveraient sur les mêmes lignes explicites qu'en desktop. */
@@ -708,7 +738,7 @@ p{margin:0}
 
     <div class="steps">
       <article class="step" data-reveal>
-        <figure class="step__vis" data-scene="vendange"
+        <figure class="step__vis" data-scene="vendange" data-parallax="0.08" data-parallax-m="-0.04"
                 style="--photo:url('assets/images/img1.jpg');--photo-pos:center;--photo-dim:0">
           <div class="step__zoom">
             <div class="scene__layer" data-depth="0.06">
@@ -727,7 +757,7 @@ p{margin:0}
                 <rect width="800" height="1000" fill="url(#sun)" opacity=".35"/>
               </svg>
             </div>
-            <div class="step__ph" data-depth="0.10"></div>
+            <div class="step__ph"></div>
           </div>
           <span class="veil" aria-hidden="true"></span>
         </figure>
@@ -739,8 +769,10 @@ p{margin:0}
         </div>
       </article>
 
-      <article class="step" data-reveal>
-        <figure class="step__vis" data-scene="cuve"
+      <!-- step--landscape = cadre 4:3 horizontal (réglages : section 07,
+           bloc « ÉTAPE PAYSAGE »). Déplaçable sur n'importe quelle étape. -->
+      <article class="step step--landscape" data-reveal>
+        <figure class="step__vis" data-scene="cuve" data-parallax="0.08" data-parallax-m="-0.04"
                 style="--photo:url('assets/images/img2.jpg');--photo-pos:center;--photo-dim:0">
           <div class="step__zoom">
             <div class="scene__layer" data-depth="0.06">
@@ -756,7 +788,7 @@ p{margin:0}
                 </g>
               </svg>
             </div>
-            <div class="step__ph" data-depth="0.10"></div>
+            <div class="step__ph"></div>
           </div>
           <span class="veil" aria-hidden="true"></span>
         </figure>
@@ -769,7 +801,7 @@ p{margin:0}
       </article>
 
       <article class="step" data-reveal>
-        <figure class="step__vis" data-scene="cave"
+        <figure class="step__vis" data-scene="cave" data-parallax="0.08" data-parallax-m="-0.04"
                 style="--photo:url('assets/images/img3.jpg');--photo-pos:center;--photo-dim:0">
           <div class="step__zoom">
             <div class="scene__layer" data-depth="0.06">
@@ -788,7 +820,7 @@ p{margin:0}
                 </g>
               </svg>
             </div>
-            <div class="step__ph" data-depth="0.10"></div>
+            <div class="step__ph"></div>
           </div>
           <span class="veil" aria-hidden="true"></span>
         </figure>
@@ -1225,7 +1257,12 @@ p{margin:0}
       items.push({ host: scene, layers: layers, after: after, box: null });
     });
     $$('[data-parallax]').forEach(function (el) {
-      items.push({ host: el, single: parseFloat(el.dataset.parallax), box: null });
+      /* data-parallax-m (optionnel) : valeur propre au mobile (≤ 900px).
+         Sert aux cadres photo : sur mobile le texte est juste dessous,
+         une parallaxe inverse les ferait se chevaucher. */
+      const m = parseFloat(el.dataset.parallaxM);
+      items.push({ host: el, single: parseFloat(el.dataset.parallax),
+                   mob: isFinite(m) ? m : undefined, box: null });
     });
 
     const sub = Engine.add({
@@ -1242,7 +1279,8 @@ p{margin:0}
           // -1 (au-dessus) → 1 (en-dessous)
           const p = ((b.top + b.h / 2) - (y + vh / 2)) / (vh + b.h) * 2;
           if (it.single !== undefined) {
-            it.host.style.transform = 'translate3d(0,' + (p * it.single * vh * 0.5).toFixed(2) + 'px,0)';
+            const f = (S.mobile && it.mob !== undefined) ? it.mob : it.single;
+            it.host.style.transform = 'translate3d(0,' + (p * f * vh * 0.5).toFixed(2) + 'px,0)';
           } else {
             for (let j = 0; j < it.layers.length; j++) {
               const d = parseFloat(it.layers[j].dataset.depth) || 0.1;
