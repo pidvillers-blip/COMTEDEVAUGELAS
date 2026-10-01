@@ -468,21 +468,6 @@ p{margin:0}
 .step:nth-child(3) .step__vis{grid-column:1 / span 4}
 .step:nth-child(3) .step__txt{grid-column:6 / span 4;align-self:center}
 
-/* ---- ÉTAPE PAYSAGE (4:3 horizontal) ---------------------------------------
-   Classe .step--landscape posée sur l'<article>. Elle l'emporte sur les
-   règles :nth-child ci-dessus (spécificité .step.step--landscape + ordre).
-   Image en col 6-12 : 7 colonnes en 4:3 donnent quasiment la même HAUTEUR
-   qu'un cadre 3:4 sur 4 colonnes, donc les trois étapes gardent le même
-   poids visuel. Son bord gauche (col 6) tombe pile sur l'alignement des
-   textes des étapes 1 et 3 : une verticale continue traverse la section.
-   Le texte passe en col 1-4, sur le bord gauche des images 1 et 3. */
-.step--landscape{--step-ratio:4/3}
-.step.step--landscape .step__vis{grid-column:6 / span 7;grid-row:1}
-.step.step--landscape .step__txt{grid-column:1 / span 4;grid-row:1;
-  align-self:start;padding:10% 0 0}
-/* décor SVG de secours (sous la photo) : marge pour sa parallaxe */
-.step--landscape .scene__layer{inset:-16% -8%}
-
 /* --- 08. NOTES & FINAL --------------------------------------------------- */
 .notes{position:relative;padding:calc(var(--sec) * 1.2) var(--gut);min-height:110svh}
 /* Le titre occupe sa propre ligne ; en dessous, le nuage d'arômes à gauche
@@ -549,7 +534,7 @@ p{margin:0}
   /* même ratio 3:4 qu'en desktop ; seul le décalage latéral alterne */
   .step:nth-child(1) .step__vis{grid-column:1 / span 4}
   .step:nth-child(2) .step__vis{grid-column:3 / span 4;grid-row:auto}
-  .step:nth-child(3) .step__vis{grid-column:2 / span 4}
+  .step:nth-child(3) .step__vis{grid-column:1 / span 4}  /* aligné sur la 1re */
   .step:nth-child(1) .step__vis,
   .step:nth-child(2) .step__vis,
   .step:nth-child(3) .step__vis{aspect-ratio:var(--step-ratio)}
@@ -559,10 +544,6 @@ p{margin:0}
     grid-column:1 / span 6;grid-row:auto;align-self:auto;padding:0;
   }
   .step:nth-child(2) .step__txt{padding-left:1.8rem}
-  /* étape paysage : pleine largeur de contenu (un 4:3 sur 4 colonnes
-     sur 6 serait un timbre-poste), texte dessous, sans retrait. */
-  .step.step--landscape .step__vis{grid-column:1 / -1;grid-row:auto}
-  .step.step--landscape .step__txt{grid-column:1 / -1;grid-row:auto;padding:0}
 
   /* en dessous de 900px on repasse en pile : grid-row:auto, sinon les trois
      blocs se retrouveraient sur les mêmes lignes explicites qu'en desktop. */
@@ -761,7 +742,7 @@ p{margin:0}
           </div>
           <span class="veil" aria-hidden="true"></span>
         </figure>
-        <div class="step__txt" data-parallax="-0.09">
+        <div class="step__txt" data-parallax="-0.09" data-parallax-m="-0.03">
           <span class="step__idx meta">01 &mdash; Septembre</span>
           <h3 data-split="words">Vendange à la main</h3>
           <span class="step__rule" aria-hidden="true"></span>
@@ -769,9 +750,7 @@ p{margin:0}
         </div>
       </article>
 
-      <!-- step--landscape = cadre 4:3 horizontal (réglages : section 07,
-           bloc « ÉTAPE PAYSAGE »). Déplaçable sur n'importe quelle étape. -->
-      <article class="step step--landscape" data-reveal>
+      <article class="step" data-reveal>
         <figure class="step__vis" data-scene="cuve" data-parallax="0.08" data-parallax-m="-0.04"
                 style="--photo:url('assets/images/img2.jpg');--photo-pos:center;--photo-dim:0">
           <div class="step__zoom">
@@ -792,7 +771,7 @@ p{margin:0}
           </div>
           <span class="veil" aria-hidden="true"></span>
         </figure>
-        <div class="step__txt" data-parallax="-0.08">
+        <div class="step__txt" data-parallax="-0.08" data-parallax-m="-0.03">
           <span class="step__idx meta">02 &mdash; Octobre</span>
           <h3 data-split="words">Le pressoir de 1900</h3>
           <span class="step__rule" aria-hidden="true"></span>
@@ -824,7 +803,7 @@ p{margin:0}
           </div>
           <span class="veil" aria-hidden="true"></span>
         </figure>
-        <div class="step__txt" data-parallax="-0.07">
+        <div class="step__txt" data-parallax="-0.07" data-parallax-m="-0.03">
           <span class="step__idx meta">03 &mdash; Toute l'année</span>
           <h3 data-split="words">La vigne laissée libre</h3>
           <span class="step__rule" aria-hidden="true"></span>
