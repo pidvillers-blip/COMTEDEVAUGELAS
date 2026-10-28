@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Comte de Vaugelas — Corbières AOP</title>
-<meta name="description" content="Cruzy, Occitanie. Une histoire de femmes, un domaine transmis, une vendange à la main, un vin fidèle à la terre.">
+<meta name="description" content="Cruzy, Hérault. Une histoire familiale au féminin, un domaine transmis depuis 1724, une vendange à la main, un vin fidèle à la terre.">
 <meta name="theme-color" content="#070806">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -280,13 +280,19 @@ p{margin:0}
   display:grid;align-items:center;
   padding:0 var(--gut);
 }
-.hero__text{position:relative;z-index:3;max-width:min(46ch,100%);will-change:transform,opacity}
-.hero__title{font-size:var(--t-xl);letter-spacing:-.02em}
+/* max-width retiré du bloc : le titre a besoin de toute la largeur pour que
+   « Une histoire familiale, » tienne sur une ligne. Le chapeau garde sa
+   propre largeur de lecture (.hero__sub). */
+.hero__text{position:relative;z-index:3;max-width:100%;will-change:transform,opacity}
+/* TITRE SUR DEUX LIGNES EXACTEMENT : « Une histoire familiale, » / « Au féminin. »
+   white-space:nowrap interdit tout retour entre les mots (une espace insécable
+   ne suffirait pas : splitWords() découpe sur \s, qui l'inclut) ; seul le <br>
+   coupe. La taille est plafonnée à 9.6vw pour que la 1re ligne, la plus longue,
+   tienne dans l'écran jusqu'au plus petit téléphone. */
+.hero__title{font-size:min(var(--t-xl),9.6vw);letter-spacing:-.02em;white-space:nowrap}
 .hero__title em{font-style:italic;font-weight:300}
-/* desktop : « Une transmission. » reste sur une seule ligne. Une espace
-   insécable ne suffirait pas : splitWords() découpe sur \s, qui l'inclut. */
-@media (min-width:901px){.hero__title em{white-space:nowrap}}
-.hero__sub{margin-top:clamp(1.2rem,3vh,2.4rem);max-width:30ch;color:var(--beige);font-size:var(--t-md)}
+/* 30ch → 36ch : le nouveau chapeau (village + Montagne Noire) est plus long */
+.hero__sub{margin-top:clamp(1.2rem,3vh,2.4rem);max-width:36ch;color:var(--beige);font-size:var(--t-md)}
 .hero__scroll{
   position:absolute;left:var(--gut);bottom:clamp(1.6rem,5vh,3rem);z-index:3;
   display:flex;align-items:center;gap:.9rem;
@@ -311,9 +317,10 @@ p{margin:0}
 .stage__sticky{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden}
 .stage__pad{position:absolute;inset:0;padding:0 var(--gut);display:grid;align-content:center}
 
-/* Blocs de texte satellites : position absolue, pilotés en JS */
+/* Blocs de texte satellites : position absolue, pilotés en JS.
+   30ch → 33ch : les textes du client sont un peu plus longs. */
 .sat{
-  position:absolute;top:50%;width:min(30ch,38vw);
+  position:absolute;top:50%;width:min(33ch,38vw);
   will-change:transform,opacity,filter;opacity:0;
 }
 .sat--l{left:var(--gut);text-align:left}
@@ -380,6 +387,13 @@ p{margin:0}
   --step-veil: .55;       /* vignettage intérieur, 0 à 1 */
 }
 .faire__head{grid-column:1 / span 6;margin-bottom:clamp(2rem,5vh,4rem)}
+/* « Vinification traditionnelle » : bloc ajouté par le client, posé à droite
+   du chapeau « Le geste », calé sur sa ligne de base. */
+.faire__aside{grid-column:8 / span 5;align-self:end;margin-bottom:clamp(2rem,5vh,4rem)}
+.faire__aside h3{font-size:var(--t-lg)}
+.faire__aside .step__rule{margin:1rem 0 1.2rem}
+.faire__aside.is-in .step__rule{transform:scaleX(1)}
+.faire__aside p{color:var(--beige);font-size:var(--t-sm);line-height:1.8;max-width:42ch}
 .steps{display:grid;gap:var(--steps-gap)}
 .step{display:grid;grid-template-columns:repeat(12,1fr);gap:var(--gut);align-items:center}
 
@@ -462,11 +476,11 @@ p{margin:0}
    couloir des images 1 et 3 (col 1-4) et directement en face de l'image. */
 .step:nth-child(2) .step__vis{grid-column:9 / span 4;grid-row:1}
 .step:nth-child(2) .step__txt{grid-column:5 / span 4;grid-row:1;align-self:start;padding-top:35%}
-/* Étape 3 : calage strictement identique à l'étape 1 (image col 1, texte col 6).
-   L'alternance se lit gauche / droite / gauche ; la seule différence entre les
-   deux étapes gauches est le calage vertical du texte (center vs end). */
+/* Étape 3 : calage identique à l'étape 1 (image col 1, texte col 6).
+   Texte sur 5 colonnes au lieu de 4 : le titre « Une taille respectueuse
+   des flux de sève » tient ainsi sur deux lignes au lieu de trois. */
 .step:nth-child(3) .step__vis{grid-column:1 / span 4}
-.step:nth-child(3) .step__txt{grid-column:6 / span 4;align-self:center}
+.step:nth-child(3) .step__txt{grid-column:6 / span 5;align-self:center}
 
 /* --- 08. NOTES & FINAL --------------------------------------------------- */
 .notes{position:relative;padding:calc(var(--sec) * 1.2) var(--gut);min-height:110svh}
@@ -526,9 +540,14 @@ p{margin:0}
     bottom:calc(var(--sat-bottom,5svh) + env(safe-area-inset-bottom,0px));text-align:left}
   .sat--l,.sat--r{left:var(--gut);right:var(--gut)}
   .sat .tick{height:20px;margin-bottom:.8rem}
-  .sat p{max-width:34ch}
+  /* textes plus longs : toute la largeur et un interlignage resserré,
+     pour que le bloc reste sous la bouteille sans la recouvrir. */
+  .sat h3{margin-bottom:.55rem}
+  .sat p{max-width:none;line-height:1.6}
 
-  .faire__head{grid-column:1 / span 6}
+  .faire__head{grid-column:1 / span 6;margin-bottom:0}
+  .faire__aside{grid-column:1 / span 6;align-self:auto;margin:1.4rem 0 clamp(2.5rem,6vh,4rem)}
+  .faire__aside p{max-width:none}
   .faire{--step-zoom:1.10;--steps-gap:clamp(2.5rem,7vh,5rem)}
   .step{grid-template-columns:repeat(6,1fr);align-items:start;gap:1.8rem}
   /* même ratio 3:4 qu'en desktop ; seul le décalage latéral alterne */
@@ -559,7 +578,7 @@ p{margin:0}
      légale tombait dans une demi-colonne à côté de « Suivre ». */
   .final__cols{row-gap:2.4rem}
   .final__cols > .legal{grid-column:1 / -1}
-  .hero__sub{max-width:26ch}
+  .hero__sub{max-width:30ch}
 }
 @media (max-width:520px){
   .rows{opacity:.34}
@@ -646,8 +665,8 @@ p{margin:0}
 
     <div class="hero__inner">
       <div class="hero__text" data-hero-text>
-        <h1 class="hero__title" data-split="words">Deux sœurs.<br><em>Une transmission.</em></h1>
-        <p class="hero__sub" data-split="words">Claire et Madeleine cultivent le domaine familial à Cruzy, dans l'Aude. Trois cépages, une vendange manuelle, un vin fidèle à la terre.</p>
+        <h1 class="hero__title" data-split="words">Une histoire familiale,<br><em>Au féminin.</em></h1>
+        <p class="hero__sub" data-split="words">Cruzy, petit village de l'Hérault au pied des reliefs qui annoncent la Montagne Noire. Trois cépages, une méthode traditionnelle, un vin fidèle à la terre.</p>
       </div>
       <p class="hero__scroll meta" data-hero-scroll><span class="line"></span> Faites défiler</p>
     </div>
@@ -665,31 +684,31 @@ p{margin:0}
         <article class="sat sat--r" data-sat data-from="0.16" data-to="0.34">
           <span class="tick"></span>
           <h3>Rose Ramel</h3>
-          <p>Veuve de guerre, elle reprend seule le domaine de Cruzy. Pas de main-d'œuvre, pas de mécanisation : elle taille, elle vendange, elle décide seule. Une posture que ses descendantes reconnaissent.</p>
+          <p>Arrière-grand-mère et veuve de guerre, elle reprend seule le domaine de Cruzy, dans la famille depuis 1724. Un principe traverse les générations : la qualité d'un vin commence par celle du raisin. Une posture que ses deux descendantes reconnaissent.</p>
         </article>
 
         <article class="sat sat--l" data-sat data-from="0.32" data-to="0.50">
           <span class="tick"></span>
-          <h3>Claire, la science du geste</h3>
-          <p>Bac professionnel viticulture, puis compagnonnage avec un œnologue bordelais. Claire comprend ce qui se joue derrière chaque geste : la taille, la cuve, le bon moment pour intervenir.</p>
+          <h3>Claire, la précision du geste</h3>
+          <p>Un retour aux sources, nourri des souvenirs d'enfance au domaine, devenu une véritable passion. Formée aux métiers de la vitiviniculture, elle est aujourd'hui accompagnée par un œnologue de renom, dont l'expertise enrichit son regard sur le vin.</p>
         </article>
 
         <article class="sat sat--r" data-sat data-from="0.48" data-to="0.66">
           <span class="tick"></span>
           <h3>Madeleine, la rigueur du détail</h3>
-          <p>Chaque année, elle reprend le travail de la cuve, ajuste, observe, recommence. La qualité ne se déclare pas une fois pour toutes : elle se construit, millésime après millésime.</p>
+          <p>Les vins du domaine sont le fruit du terroir, de sa passion pour le métier et de son attachement au vignoble de Cruzy. Avec Claire, un même credo : récolter à maturité optimale, pour des vins élégants, entre puissance et délicatesse, fidèles à la fraîcheur du fruit.</p>
         </article>
 
         <article class="sat sat--l" data-sat data-from="0.64" data-to="0.82">
           <span class="tick"></span>
           <h3>Trois cépages, une terre</h3>
-          <p>Merlot, Syrah, Cinsault. Cultivés sans irrigation, au rythme naturel de la vigne. La sécheresse du Midi impose sa propre discipline, et on la respecte.</p>
+          <p>Merlot, Syrah, Cinsault, cultivés sans irrigation. La sécheresse du Midi impose sa discipline : sol travaillé mécaniquement, sans enherbement, rognage minimal pour que les feuilles ombragent les grappes, respect de la faune et de la flore.</p>
         </article>
 
         <article class="sat sat--r" data-sat data-from="0.82" data-to="0.98">
           <span class="tick"></span>
-          <h3>Un pressoir de 1900</h3>
-          <p>Claire et Madeleine se sont réapproprié le pressoir traditionnel du domaine. Un geste ancien, conservé pour ce qu'il apporte au fruit : la délicatesse plutôt que le rendement.</p>
+          <h3>Un pressoir traditionnel</h3>
+          <p>Claire et Madeleine se sont réapproprié le pressoir traditionnel du domaine. Un geste ancien, conservé pour ce qu'il préserve du fruit : la délicatesse plutôt que le rendement.</p>
         </article>
 
         <!-- Repli sans WebGL : silhouette dont la largeur simule la rotation -->
@@ -714,6 +733,11 @@ p{margin:0}
         <p class="prose fade" style="margin-top:1.6rem">
           Trois gestes racontent l'année. Le reste, c'est la patience de deux femmes.
         </p>
+      </div>
+      <div class="faire__aside" data-reveal>
+        <h3 data-split="words">Vinification traditionnelle</h3>
+        <span class="step__rule" aria-hidden="true"></span>
+        <p class="fade">Claire et Madeleine sont très attachées aux méthodes artisanales, sans interventions chimiques ni technologiques lourdes. La fermentation alcoolique fait la part belle aux levures indigènes ; l'élevage reste classique, en cuves béton traditionnelles, pour laisser s'exprimer le terroir.</p>
       </div>
     </div>
 
@@ -775,7 +799,7 @@ p{margin:0}
           <span class="step__idx meta">02 &mdash; Octobre</span>
           <h3 data-split="words">Le pressoir de 1900</h3>
           <span class="step__rule" aria-hidden="true"></span>
-          <p class="fade">Le fruit passe par le pressoir traditionnel repris par les deux sœurs. Un geste lent, pensé pour préserver le raisin plutôt que pour gagner du volume.</p>
+          <p class="fade">Le fruit passe par le pressoir traditionnel repris par les deux sœurs. Un geste lent, pensé pour une extraction douce et qualitative du jus, plutôt que pour gagner du volume.</p>
         </div>
       </article>
 
@@ -805,9 +829,9 @@ p{margin:0}
         </figure>
         <div class="step__txt" data-parallax="-0.07" data-parallax-m="-0.03">
           <span class="step__idx meta">03 &mdash; Toute l'année</span>
-          <h3 data-split="words">La vigne laissée libre</h3>
+          <h3 data-split="words">Une taille respectueuse des flux de sève</h3>
           <span class="step__rule" aria-hidden="true"></span>
-          <p class="fade">Une taille qui ne contraint jamais trop la vigne. Assez de feuillage pour protéger les grappes du soleil et de la sécheresse du Midi.</p>
+          <p class="fade">Claire et Madeleine taillent leurs vignes en Guyot simple pour limiter le nombre de grappes par cep : une meilleure maturité des raisins, des jus plus concentrés et qualitatifs.</p>
         </div>
       </article>
     </div>
@@ -844,7 +868,7 @@ p{margin:0}
   <footer class="final" id="contact">
     <div>
       <h2 class="final__name" data-split="chars">Comte de Vaugelas</h2>
-      <p class="final__line fade">Le vin se fait une fois par an. Le reste, c'est une histoire de famille.</p>
+      <p class="final__line fade">Une vendange chaque année, une histoire de famille au fil des saisons.</p>
     </div>
 
     <div class="final__cols">
@@ -859,7 +883,8 @@ p{margin:0}
       </div>
       <div class="fade" style="--i:2">
         <h4>Suivre</h4>
-        <p><a href="https://instagram.com" rel="noopener">Instagram</a></p>
+        <p><a href="https://instagram.com" rel="noopener">Instagram</a><br>
+        <a href="https://www.facebook.com/profile.php?id=61577114557652" rel="noopener">Facebook</a></p>
       </div>
       <div class="legal">
         <span>© 2026 Comte de Vaugelas</span>
