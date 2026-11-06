@@ -387,6 +387,13 @@ p{margin:0}
   --step-veil: .55;       /* vignettage intérieur, 0 à 1 */
 }
 .faire__head{grid-column:1 / span 6;margin-bottom:clamp(2rem,5vh,4rem)}
+/* Desktop : « Trois temps rythment l'année. » sur UNE ligne. Le bloc prend
+   toute la largeur (12 col.) et la taille est plafonnée à 6.6vw pour que la
+   phrase tienne dans l'écran jusqu'à ~1000px de large. */
+@media (min-width:901px){
+  .faire__head{grid-column:1 / -1}
+  .faire__head .display{white-space:nowrap;font-size:min(var(--t-xl),6.6vw)}
+}
 /* « Vinification traditionnelle » : bloc ajouté par le client, posé à droite
    du chapeau « Le geste », calé sur sa ligne de base. */
 .faire__aside{grid-column:8 / span 5;align-self:end;margin-bottom:clamp(2rem,5vh,4rem)}
@@ -458,7 +465,8 @@ p{margin:0}
 }
 .is-in .step__rule{transform:scaleX(1)}
 .step__txt h3{font-size:var(--t-lg)}
-.step__txt p{color:var(--beige);font-size:var(--t-sm);line-height:1.8;max-width:32ch}
+/* 32ch → 46ch : paragraphes plus larges, donc moins de lignes (desktop) */
+.step__txt p{color:var(--beige);font-size:var(--t-sm);line-height:1.8;max-width:46ch}
 
 /* --- rythme : alternance gauche / droite, calages verticaux différents --- */
 /* cadres sur 4 colonnes (au lieu de 5) : mêmes proportions, moins de place.
@@ -467,7 +475,9 @@ p{margin:0}
 .step:nth-child(1) .step__vis{grid-column:1 / span 4}
 /* padding-bottom en % se résout sur la LARGEUR du bloc, pas sa hauteur :
    6% → 12% remonte le texte d'environ 4,5% de la hauteur de la photo. */
-.step:nth-child(1) .step__txt{grid-column:6 / span 4;align-self:end;padding-bottom:35%}
+/* 4 → 5 colonnes pour élargir le paragraphe ; padding 35% → 28% car il se
+   calcule sur la largeur (bloc plus large = même hauteur visuelle). */
+.step:nth-child(1) .step__txt{grid-column:6 / span 5;align-self:end;padding-bottom:28%}
 /* Étape 2 : le texte part à GAUCHE alors que l'image est à DROITE (col 9).
    L'auto-placement CSS pousse alors le texte sur une 2e ligne, parce qu'il
    repart vers une colonne plus petite que le curseur. D'où grid-row:1
@@ -475,12 +485,13 @@ p{margin:0}
    Texte en col 5-8 : bande centrale exacte du 12 colonnes, donc dégagée du
    couloir des images 1 et 3 (col 1-4) et directement en face de l'image. */
 .step:nth-child(2) .step__vis{grid-column:9 / span 4;grid-row:1}
-.step:nth-child(2) .step__txt{grid-column:5 / span 4;grid-row:1;align-self:start;padding-top:35%}
+/* élargi vers la gauche (col 4-8) : l'image reste en col 9-12 */
+.step:nth-child(2) .step__txt{grid-column:4 / span 5;grid-row:1;align-self:start;padding-top:28%}
 /* Étape 3 : calage identique à l'étape 1 (image col 1, texte col 6).
    Texte sur 5 colonnes au lieu de 4 : le titre « Une taille respectueuse
    des flux de sève » tient ainsi sur deux lignes au lieu de trois. */
 .step:nth-child(3) .step__vis{grid-column:1 / span 4}
-.step:nth-child(3) .step__txt{grid-column:6 / span 5;align-self:center}
+.step:nth-child(3) .step__txt{grid-column:6 / span 6;align-self:center}
 
 /* --- 08. NOTES & FINAL --------------------------------------------------- */
 .notes{position:relative;padding:calc(var(--sec) * 1.2) var(--gut);min-height:110svh}
@@ -546,6 +557,11 @@ p{margin:0}
   .sat p{max-width:none;line-height:1.6}
 
   .faire__head{grid-column:1 / span 6;margin-bottom:0}
+  /* Mobile : le titre passe sur deux lignes équilibrées
+     (« Trois temps / rythment l'année. ») plutôt qu'un mot orphelin. */
+  .faire__head .display{text-wrap:balance}
+  /* paragraphes : toute la largeur disponible sur téléphone */
+  .step__txt p{max-width:none}
   .faire__aside{grid-column:1 / span 6;align-self:auto;margin:1.4rem 0 clamp(2.5rem,6vh,4rem)}
   .faire__aside p{max-width:none}
   .faire{--step-zoom:1.10;--steps-gap:clamp(2.5rem,7vh,5rem)}
@@ -689,14 +705,14 @@ p{margin:0}
 
         <article class="sat sat--l" data-sat data-from="0.32" data-to="0.50">
           <span class="tick"></span>
-          <h3>Claire, la précision du geste</h3>
-          <p>Un retour aux sources, nourri des souvenirs d'enfance au domaine, devenu une véritable passion. Formée aux métiers de la vitiviniculture, elle est aujourd'hui accompagnée par un œnologue de renom, dont l'expertise enrichit son regard sur le vin.</p>
+          <h3>Pour Claire,</h3>
+          <p>C'est un retour aux sources, nourri des souvenirs d'enfance au domaine, devenu une véritable passion. Formée aux métiers de la vitiviniculture, elle est aujourd'hui accompagnée par un œnologue de renom, dont l'expertise enrichit son regard sur le vin.</p>
         </article>
 
         <article class="sat sat--r" data-sat data-from="0.48" data-to="0.66">
           <span class="tick"></span>
-          <h3>Madeleine, la rigueur du détail</h3>
-          <p>Les vins du domaine sont le fruit du terroir, de sa passion pour le métier et de son attachement au vignoble de Cruzy. Avec Claire, un même credo : récolter à maturité optimale, pour des vins élégants, entre puissance et délicatesse, fidèles à la fraîcheur du fruit.</p>
+          <h3>Pour Madeleine,</h3>
+          <p>Les vins du domaine sont le fruit de sa passion pour le métier et de son attachement au vignoble de Cruzy. Avec Claire, un même credo : récolter à maturité optimale, pour des vins élégants, entre puissance et délicatesse, fidèles à la fraîcheur du fruit.</p>
         </article>
 
         <article class="sat sat--l" data-sat data-from="0.64" data-to="0.82">
@@ -708,7 +724,7 @@ p{margin:0}
         <article class="sat sat--r" data-sat data-from="0.82" data-to="0.98">
           <span class="tick"></span>
           <h3>Un pressoir traditionnel</h3>
-          <p>Claire et Madeleine se sont réapproprié le pressoir traditionnel du domaine. Un geste ancien, conservé pour ce qu'il préserve du fruit : la délicatesse plutôt que le rendement.</p>
+          <p>Claire et Madeleine se sont réappropriées le pressoir traditionnel du domaine. Un geste ancien, conservé pour ce qu'il préserve du fruit : la délicatesse plutôt que le rendement.</p>
         </article>
 
         <!-- Repli sans WebGL : silhouette dont la largeur simule la rotation -->
@@ -729,15 +745,10 @@ p{margin:0}
   <section class="sect faire" id="savoir-faire" aria-labelledby="t-faire">
     <div class="grid">
       <div class="faire__head" data-parallax="0.05">
-        <h2 id="t-faire" class="display" data-split="words">Le geste</h2>
+        <h2 id="t-faire" class="display" data-split="words">Trois temps rythment l'année.</h2>
         <p class="prose fade" style="margin-top:1.6rem">
-          Trois gestes racontent l'année. Le reste, c'est la patience de deux femmes.
+          Le reste, c'est la patience de deux femmes.
         </p>
-      </div>
-      <div class="faire__aside" data-reveal>
-        <h3 data-split="words">Vinification traditionnelle</h3>
-        <span class="step__rule" aria-hidden="true"></span>
-        <p class="fade">Claire et Madeleine sont très attachées aux méthodes artisanales, sans interventions chimiques ni technologiques lourdes. La fermentation alcoolique fait la part belle aux levures indigènes ; l'élevage reste classique, en cuves béton traditionnelles, pour laisser s'exprimer le terroir.</p>
       </div>
     </div>
 
@@ -767,10 +778,10 @@ p{margin:0}
           <span class="veil" aria-hidden="true"></span>
         </figure>
         <div class="step__txt" data-parallax="-0.09" data-parallax-m="-0.03">
-          <span class="step__idx meta">01 &mdash; Septembre</span>
-          <h3 data-split="words">Vendange à la main</h3>
+          <span class="step__idx meta"> </span>
+          <h3 data-split="words">Vinification traditionnelle</h3>
           <span class="step__rule" aria-hidden="true"></span>
-          <p class="fade">Vendange manuelle, menée par Claire et Madeleine, rang après rang. On ne coupe que ce qui est prêt, et on revient le lendemain pour le reste.</p>
+          <p class="fade">Claire et Madeleine sont très attachées aux méthodes artisanales, sans interventions chimiques ni technologiques lourdes. La fermentation alcoolique fait la part belle aux levures indigènes ; l'élevage reste classique, en cuves traditionnelles, pour laisser s'exprimer le terroir.</p>
         </div>
       </article>
 
@@ -796,7 +807,7 @@ p{margin:0}
           <span class="veil" aria-hidden="true"></span>
         </figure>
         <div class="step__txt" data-parallax="-0.08" data-parallax-m="-0.03">
-          <span class="step__idx meta">02 &mdash; Octobre</span>
+          <span class="step__idx meta"></span>
           <h3 data-split="words">Le pressoir de 1900</h3>
           <span class="step__rule" aria-hidden="true"></span>
           <p class="fade">Le fruit passe par le pressoir traditionnel repris par les deux sœurs. Un geste lent, pensé pour une extraction douce et qualitative du jus, plutôt que pour gagner du volume.</p>
@@ -828,10 +839,10 @@ p{margin:0}
           <span class="veil" aria-hidden="true"></span>
         </figure>
         <div class="step__txt" data-parallax="-0.07" data-parallax-m="-0.03">
-          <span class="step__idx meta">03 &mdash; Toute l'année</span>
+          <span class="step__idx meta"></span>
           <h3 data-split="words">Une taille respectueuse des flux de sève</h3>
           <span class="step__rule" aria-hidden="true"></span>
-          <p class="fade">Claire et Madeleine taillent leurs vignes en Guyot simple pour limiter le nombre de grappes par cep : une meilleure maturité des raisins, des jus plus concentrés et qualitatifs.</p>
+          <p class="fade">Claire et Madeleine taillent leurs vignes en Guyot simple pour favoriser une bonne répartition des feuilles et une production de raisins de qualité : une meilleure maturité des raisins, des jus plus concentrés et qualitatifs.</p>
         </div>
       </article>
     </div>
@@ -850,7 +861,7 @@ p{margin:0}
   <!-- ===================== NOTES ===================== -->
   <section class="sect notes" id="notes" aria-labelledby="t-notes">
     <div class="grid">
-      <h2 id="t-notes" class="notes__title" data-split="words" data-parallax="0.07">Ce qu'on y trouve, en général, et jamais tout à fait pareil</h2>
+      <h2 id="t-notes" class="notes__title" data-split="words" data-parallax="0.07">Ce qu'on y trouve en général, et pourtant jamais tout à fait pareil</h2>
       <div class="aromes">
         <span class="arome arome--1 fade" data-parallax="0.06">fruits rouges</span>
         <span class="arome arome--2 fade" style="--i:1" data-parallax="-0.1"><i>cassis</i></span>
